@@ -48,7 +48,16 @@ wind_speed_10m, wind_gusts_10m
   `fetchForecast(lat, lon): Promise<NormalizedForecast[]>`
 - `src/lib/geocoding.ts` : recherche de ville
 - `src/lib/aggregate.ts` : agrégation, fonctions pures, testées
-- Ajouter une source = ajouter un provider, rien d'autre ne change
+  (médiane, confiance et seuils d'écart par variable, résumé journalier)
+- `src/lib/forecast-view.ts` : vue affichée (jours 1-7 / au-delà,
+  confiance réduite au-delà de 7 jours), fonction pure, testée
+- `src/lib/forecast.server.ts` : appel des providers
+  (Promise.allSettled) et cache serveur
+- `src/lib/weather.functions.ts` : server functions (seul point
+  d'entrée vers les API) ; validation dans `src/lib/validation.ts`
+- `src/providers/index.ts` : liste des providers
+- Ajouter une source = ajouter un provider et l'inscrire dans
+  `src/providers/index.ts`, rien d'autre ne change
 
 ## Format normalisé
 ```ts
@@ -78,13 +87,15 @@ type NormalizedForecast = {
   quel que soit l'écart
 
 ## Horizon et nombre de modèles
-- Les modèles n'ont pas tous le même horizon (UKMO environ 7 jours,
-  GEM environ 10 jours, ECMWF et GFS jusqu'à 15-16 jours).
+- Les modèles n'ont pas tous le même horizon. Mesuré le 2026-09-23
+  (Paris, `forecast_days=16`, depuis minuit UTC) : Météo-France ≈ 4,8 j,
+  UKMO ≈ 7 j, ICON ≈ 7,5 j, GEM ≈ 10,5 j, ECMWF ≈ 15 j, GFS 16 j.
 - Au-delà de leur horizon, les valeurs d'un modèle sont `null`.
+- Dès le 5e jour il ne reste que 5 modèles (Météo-France s'arrête).
 - Au-delà de 7 jours, il reste peu de modèles : ne pas présenter une
   médiane de 2 modèles comme fiable.
-- Vérifier les horizons réels avec un appel `forecast_days=16`
-  plutôt que de se fier à ces chiffres.
+- Ces horizons peuvent évoluer : les revérifier avec un vrai appel
+  `forecast_days=16` plutôt que de s'y fier aveuglément.
 
 ## Pièges connus
 - Réponse multi-modèles : clés au format `{variable}_{modele}`
@@ -94,8 +105,9 @@ type NormalizedForecast = {
   sans offset. Ne pas utiliser `timezone=auto`.
 - Affichage : convertir dans le fuseau de la VILLE choisie (champ
   `timezone` du géocodage), pas dans celui du navigateur.
-- `forecast_hours` / `forecast_days` démarrent à l'heure courante,
-  pas à minuit.
+- `forecast_days` démarre à minuit UTC du jour courant, pas à l'heure
+  courante (vérifié par un vrai appel) : les heures passées sont
+  écartées côté serveur (`currentHourIso` dans `buildForecastView`).
 - `precipitation` = somme de l'heure précédente. Si MET Norway est
   ajouté un jour : il donne l'heure suivante (`next_1_hours`),
   il faudra réaligner d'une heure.

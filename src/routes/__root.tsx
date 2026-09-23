@@ -27,7 +27,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Météo multi-modèles',
       },
     ],
     links: [
@@ -42,11 +42,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-slate-50 text-slate-900 antialiased">
         {children}
         <TanStackDevtools
           config={{
