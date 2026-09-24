@@ -48,7 +48,9 @@ describe('formatValue', () => {
 describe('formatWithUnit', () => {
   it("ajoute l'unité", () => {
     expect(formatWithUnit(12.3, HOURLY_FIELD_META.temp)).toBe('12,3°C')
-    expect(plain(formatWithUnit(25, HOURLY_FIELD_META.windSpeed))).toBe('25 km/h')
+    expect(plain(formatWithUnit(25, HOURLY_FIELD_META.windSpeed))).toBe(
+      '25 km/h',
+    )
     expect(formatWithUnit(null, HOURLY_FIELD_META.windSpeed)).toBe('–')
   })
 })

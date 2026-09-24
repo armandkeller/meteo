@@ -5,8 +5,8 @@ import { AppHeader } from '#/components/AppHeader'
 import { ConfidenceBadge, ConfidenceLegend } from '#/components/Confidence'
 import { ForecastChart } from '#/components/ForecastChart'
 import { DailyTable, HourlyTable } from '#/components/ForecastTables'
-import { FORECAST_FIELDS } from '#/lib/aggregate'
 import type { Confidence, ForecastField } from '#/lib/aggregate'
+import { FORECAST_FIELDS } from '#/lib/aggregate'
 import { HOURLY_FIELD_META, MODEL_LABELS } from '#/lib/fields'
 import type { ForecastView } from '#/lib/forecast-view'
 import { MAIN_FORECAST_DAYS } from '#/lib/forecast-view'
@@ -30,10 +30,18 @@ function toNumber(value: unknown): number {
 function validateSearch(search: Record<string, unknown>): PrevisionSearch {
   const lat = toNumber(search.lat)
   const lon = toNumber(search.lon)
-  if (Number.isNaN(lat) || Math.abs(lat) > 90 || Number.isNaN(lon) || Math.abs(lon) > 180) {
+  if (
+    Number.isNaN(lat) ||
+    Math.abs(lat) > 90 ||
+    Number.isNaN(lon) ||
+    Math.abs(lon) > 180
+  ) {
     throw new Error('Coordonnées invalides')
   }
-  const tz = typeof search.tz === 'string' && isValidTimeZone(search.tz) ? search.tz : 'UTC'
+  const tz =
+    typeof search.tz === 'string' && isValidTimeZone(search.tz)
+      ? search.tz
+      : 'UTC'
   return {
     name: typeof search.name === 'string' ? search.name : 'Lieu',
     country: typeof search.country === 'string' ? search.country : '',
@@ -53,16 +61,24 @@ const forecastQuery = (lat: number, lon: number, timeZone: string) =>
 
 export const Route = createFileRoute('/prevision')({
   validateSearch,
-  loaderDeps: ({ search }) => ({ lat: search.lat, lon: search.lon, tz: search.tz }),
+  loaderDeps: ({ search }) => ({
+    lat: search.lat,
+    lon: search.lon,
+    tz: search.tz,
+  }),
   loader: ({ context, deps }) =>
-    context.queryClient.ensureQueryData(forecastQuery(deps.lat, deps.lon, deps.tz)),
+    context.queryClient.ensureQueryData(
+      forecastQuery(deps.lat, deps.lon, deps.tz),
+    ),
   head: ({ match }) => ({
     meta: [{ title: `${match.search.name} – Météo multi-modèles` }],
   }),
   component: PrevisionPage,
   pendingComponent: () => (
     <Shell>
-      <p className="py-16 text-center text-slate-500">Chargement des modèles…</p>
+      <p className="py-16 text-center text-slate-500">
+        Chargement des modèles…
+      </p>
     </Shell>
   ),
   errorComponent: ({ error, reset }) => (
@@ -94,8 +110,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 // Part des heures (jours 1 à 7) à chaque niveau de confiance, pour le résumé.
-function overallConfidence(view: ForecastView, field: ForecastField): Confidence {
-  const main = view.hourly.filter((p) => !p.extended && p.values[field].modelCount > 0)
+function overallConfidence(
+  view: ForecastView,
+  field: ForecastField,
+): Confidence {
+  const main = view.hourly.filter(
+    (p) => !p.extended && p.values[field].modelCount > 0,
+  )
   if (main.length === 0) return 'faible'
   const counts = { elevee: 0, moyenne: 0, faible: 0 }
   for (const p of main) counts[p.values[field].confidence]++
@@ -106,7 +127,9 @@ function overallConfidence(view: ForecastView, field: ForecastField): Confidence
 
 function PrevisionPage() {
   const search = Route.useSearch()
-  const { data: view } = useSuspenseQuery(forecastQuery(search.lat, search.lon, search.tz))
+  const { data: view } = useSuspenseQuery(
+    forecastQuery(search.lat, search.lon, search.tz),
+  )
   const [field, setField] = useState<ForecastField>('temp')
   const [showExtended, setShowExtended] = useState(false)
 
@@ -123,7 +146,9 @@ function PrevisionPage() {
           <p className="text-slate-600">
             {[search.admin1, search.country].filter(Boolean).join(', ')}
             <span className="text-slate-400">
-              {' '}· {search.lat.toFixed(2)}, {search.lon.toFixed(2)} · heures locales ({view.timeZone})
+              {' '}
+              · {search.lat.toFixed(2)}, {search.lon.toFixed(2)} · heures
+              locales ({view.timeZone})
             </span>
           </p>
         </div>
@@ -136,14 +161,18 @@ function PrevisionPage() {
       {view.failures.length > 0 && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           Source indisponible :{' '}
-          {view.failures.map((f) => `${f.source} (${f.message})`).join(', ')}. Les
-          autres sources sont affichées.
+          {view.failures.map((f) => `${f.source} (${f.message})`).join(', ')}.
+          Les autres sources sont affichées.
         </div>
       )}
 
       <section className="rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div role="tablist" aria-label="Variable affichée" className="flex flex-wrap gap-1">
+          <div
+            role="tablist"
+            aria-label="Variable affichée"
+            className="flex flex-wrap gap-1"
+          >
             {FORECAST_FIELDS.map((f) => (
               <button
                 key={f}
@@ -175,7 +204,9 @@ function PrevisionPage() {
             {meta.label} <span className="text-slate-400">({meta.unit})</span>
           </h2>
           <ConfidenceBadge level={overallConfidence(view, field)} />
-          {meta.hint && <span className="text-xs text-slate-500">{meta.hint}</span>}
+          {meta.hint && (
+            <span className="text-xs text-slate-500">{meta.hint}</span>
+          )}
         </div>
         <p className="mt-1 text-xs text-slate-500">
           Ligne : médiane des modèles. Zone colorée : écart entre le modèle le
@@ -201,7 +232,9 @@ function PrevisionPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-1 text-lg font-semibold">Prévisions heure par heure</h2>
+        <h2 className="mb-1 text-lg font-semibold">
+          Prévisions heure par heure
+        </h2>
         <p className="mb-3 text-sm text-slate-500">
           Survolez une valeur pour voir l'écart entre modèles.
         </p>

@@ -1,13 +1,18 @@
-import { FORECAST_FIELDS, DAILY_FIELDS } from '#/lib/aggregate'
 import type { DailyField, ForecastField } from '#/lib/aggregate'
+import { DAILY_FIELDS, FORECAST_FIELDS } from '#/lib/aggregate'
+import type { FieldMeta } from '#/lib/fields'
 import {
   CONFIDENCE_LABELS,
   DAILY_FIELD_META,
   HOURLY_FIELD_META,
 } from '#/lib/fields'
-import type { FieldMeta } from '#/lib/fields'
 import type { DailyPoint, HourlyPoint, RatedValue } from '#/lib/forecast-view'
-import { formatHour, formatLocalDate, formatValue, formatWithUnit } from '#/lib/format'
+import {
+  formatHour,
+  formatLocalDate,
+  formatValue,
+  formatWithUnit,
+} from '#/lib/format'
 import { ConfidenceDot } from './Confidence'
 
 function describe(value: RatedValue, meta: FieldMeta): string {
@@ -23,7 +28,10 @@ function describe(value: RatedValue, meta: FieldMeta): string {
 
 function ValueCell({ value, meta }: { value: RatedValue; meta: FieldMeta }) {
   return (
-    <td className="px-2 py-1.5 text-right tabular-nums" title={describe(value, meta)}>
+    <td
+      className="px-2 py-1.5 text-right tabular-nums"
+      title={describe(value, meta)}
+    >
       <span className="inline-flex items-center justify-end gap-1.5">
         {formatValue(value.median, meta)}
         {value.modelCount > 0 && <ConfidenceDot level={value.confidence} />}
@@ -40,7 +48,9 @@ function HeaderCell({ meta }: { meta: FieldMeta }) {
       title={meta.hint ? `${meta.label} – ${meta.hint}` : meta.label}
     >
       {meta.short}
-      <span className="block text-[10px] font-normal text-slate-400">{meta.unit}</span>
+      <span className="block text-[10px] font-normal text-slate-400">
+        {meta.unit}
+      </span>
     </th>
   )
 }
@@ -72,7 +82,9 @@ export function HourlyTable({
           className="group rounded-lg border border-slate-200 bg-white"
         >
           <summary className="flex cursor-pointer items-center justify-between px-4 py-2.5 font-medium text-slate-800 select-none">
-            <span className="first-letter:uppercase">{formatLocalDate(date)}</span>
+            <span className="first-letter:uppercase">
+              {formatLocalDate(date)}
+            </span>
             <span className="text-xs font-normal text-slate-500 group-open:hidden">
               Afficher les heures
             </span>
@@ -95,7 +107,10 @@ export function HourlyTable({
               <tbody className="divide-y divide-slate-100">
                 {points.map((point) => (
                   <tr key={point.time} className="hover:bg-slate-50">
-                    <th scope="row" className="px-3 py-1.5 text-left font-normal text-slate-600 tabular-nums whitespace-nowrap">
+                    <th
+                      scope="row"
+                      className="px-3 py-1.5 text-left font-normal text-slate-600 tabular-nums whitespace-nowrap"
+                    >
                       {formatHour(point.time, timeZone)}
                     </th>
                     {FORECAST_FIELDS.map((field: ForecastField) => (
@@ -139,7 +154,10 @@ export function DailyTable({ daily }: { daily: DailyPoint[] }) {
         <tbody className="divide-y divide-slate-100">
           {daily.map((day) => (
             <tr key={day.date} className="hover:bg-slate-50">
-              <th scope="row" className="px-3 py-1.5 text-left font-normal whitespace-nowrap text-slate-700">
+              <th
+                scope="row"
+                className="px-3 py-1.5 text-left font-normal whitespace-nowrap text-slate-700"
+              >
                 <span className="first-letter:uppercase">
                   {formatLocalDate(day.date, 'short')}
                 </span>

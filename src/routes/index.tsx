@@ -10,11 +10,13 @@ function Home() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-16">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Météo multi-modèles</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Météo multi-modèles
+        </h1>
         <p className="mt-3 text-slate-600">
           Compare {MODELS.length} modèles météo mondiaux, affiche la valeur la
-          plus probable (médiane) et, surtout, un indice de confiance : plus
-          les modèles divergent, moins la prévision est sûre.
+          plus probable (médiane) et, surtout, un indice de confiance : plus les
+          modèles divergent, moins la prévision est sûre.
         </p>
       </div>
       <CitySearch autoFocus />

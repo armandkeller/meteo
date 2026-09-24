@@ -24,18 +24,19 @@ export const MIN_MODELS_FOR_CONFIDENCE = 3
 // Au-delà du second seuil : confiance faible.
 export type SpreadThresholds = readonly [high: number, medium: number]
 
-export const HOURLY_SPREAD_THRESHOLDS: Record<ForecastField, SpreadThresholds> = {
-  temp: [3, 6], // °C
-  apparentTemp: [4, 8], // °C
-  humidity: [10, 20], // %
-  precip: [0.5, 2], // mm
-  rain: [0.5, 2], // mm
-  snowfall: [0.3, 1], // cm
-  cloudCover: [25, 50], // %
-  sunshine: [900, 1800], // s
-  windSpeed: [8, 15], // km/h
-  windGusts: [12, 25], // km/h
-}
+export const HOURLY_SPREAD_THRESHOLDS: Record<ForecastField, SpreadThresholds> =
+  {
+    temp: [3, 6], // °C
+    apparentTemp: [4, 8], // °C
+    humidity: [10, 20], // %
+    precip: [0.5, 2], // mm
+    rain: [0.5, 2], // mm
+    snowfall: [0.3, 1], // cm
+    cloudCover: [25, 50], // %
+    sunshine: [900, 1800], // s
+    windSpeed: [8, 15], // km/h
+    windGusts: [12, 25], // km/h
+  }
 
 // Médiane en ignorant les null (jamais traités comme 0).
 // Nombre pair de valeurs : moyenne des deux valeurs centrales.

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  MAIN_FORECAST_DAYS,
   buildForecastView,
   currentHourIso,
+  MAIN_FORECAST_DAYS,
 } from '../src/lib/forecast-view'
 import { normalize } from '../src/providers/open-meteo'
 import type { NormalizedForecast } from '../src/types/forecast'
@@ -31,7 +31,11 @@ function forecast(
 }
 
 // `days` jours de 24 h à partir du 23 septembre 00:00 UTC, pour `models` modèles
-function series(days: number, models: string[], temp = 15): NormalizedForecast[] {
+function series(
+  days: number,
+  models: string[],
+  temp = 15,
+): NormalizedForecast[] {
   const start = Date.parse('2026-09-23T00:00:00.000Z')
   return models.flatMap((source) =>
     Array.from({ length: days * 24 }, (_, h) =>
@@ -80,10 +84,7 @@ describe('buildForecastView', () => {
 
   it("passe en confiance faible quand des modèles s'arrêtent", () => {
     // 3 modèles sur 2 jours, puis un seul modèle continue
-    const forecasts = [
-      ...series(2, ['a', 'b']),
-      ...series(4, ['c']),
-    ]
+    const forecasts = [...series(2, ['a', 'b']), ...series(4, ['c'])]
     const view = buildForecastView(forecasts, 'UTC')
     expect(view.hourly[0].values.temp.modelCount).toBe(3)
     expect(view.hourly[0].values.temp.confidence).toBe('elevee')
