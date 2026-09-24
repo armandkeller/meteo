@@ -75,7 +75,10 @@ export function ForecastChart({ hourly, field, timeZone }: Props) {
   return (
     <div className="h-72 w-full sm:h-80">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+        >
           <CartesianGrid stroke="#e2e8f0" vertical={false} />
           {extendedStart !== undefined && lastT !== undefined && (
             <ReferenceArea
@@ -107,7 +110,11 @@ export function ForecastChart({ hourly, field, timeZone }: Props) {
             width={44}
             tick={{ fontSize: 11, fill: '#64748b' }}
             tickFormatter={(v: number) => formatValue(v / scale, meta)}
-            domain={meta.cumulative || meta.unit === '%' ? [0, 'auto'] : ['auto', 'auto']}
+            domain={
+              meta.cumulative || meta.unit === '%'
+                ? [0, 'auto']
+                : ['auto', 'auto']
+            }
             unit={meta.unit === '%' ? '%' : undefined}
           />
           <Tooltip
@@ -125,7 +132,8 @@ export function ForecastChart({ hourly, field, timeZone }: Props) {
                     Médiane : <strong>{formatWithUnit(v.median, meta)}</strong>
                   </div>
                   <div className="text-slate-600">
-                    Écart : {formatWithUnit(v.min, meta)} à {formatWithUnit(v.max, meta)}
+                    Écart : {formatWithUnit(v.min, meta)} à{' '}
+                    {formatWithUnit(v.max, meta)}
                   </div>
                   <div className="text-slate-600">
                     {v.modelCount} modèle{v.modelCount > 1 ? 's' : ''} ·{' '}

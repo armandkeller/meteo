@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  HOURLY_SPREAD_THRESHOLDS,
   aggregateByDay,
   aggregateByHour,
   confidence,
+  HOURLY_SPREAD_THRESHOLDS,
   localDate,
   median,
   summarize,
@@ -208,7 +208,10 @@ describe('confidence', () => {
 
   it('est faible sans aucune valeur', () => {
     expect(
-      confidence({ median: null, min: null, max: null, modelCount: 0 }, thresholds),
+      confidence(
+        { median: null, min: null, max: null, modelCount: 0 },
+        thresholds,
+      ),
     ).toBe('faible')
   })
 
@@ -258,7 +261,11 @@ describe('aggregateByDay', () => {
   it('calcule min et max par modèle puis la médiane entre modèles', () => {
     const ramp = (base: number) => day.map((_, i) => base + i / 2)
     const [result] = aggregateByDay(
-      [...model('a', ramp(10)), ...model('b', ramp(12)), ...model('c', ramp(14))],
+      [
+        ...model('a', ramp(10)),
+        ...model('b', ramp(12)),
+        ...model('c', ramp(14)),
+      ],
       'UTC',
     )
     expect(result.date).toBe('2026-09-23')
@@ -282,7 +289,11 @@ describe('aggregateByDay', () => {
       [
         ...model('a', temps, rainAt(3)),
         ...model('b', temps, rainAt(15)),
-        ...model('c', temps, day.map(() => 0)),
+        ...model(
+          'c',
+          temps,
+          day.map(() => 0),
+        ),
       ],
       'UTC',
     )

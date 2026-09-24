@@ -14,8 +14,7 @@ describe('normalize', () => {
     })
 
     it('découpe les clés {variable}_{modele} de openmeteo-quebec-sec.json', () => {
-      const first = (model: string) =>
-        forecasts.find((f) => f.source === model)
+      const first = (model: string) => forecasts.find((f) => f.source === model)
       expect(first('ecmwf_ifs025')?.temp).toBe(8.7)
       expect(first('gfs_seamless')?.temp).toBe(9.5)
       expect(first('icon_seamless')?.temp).toBe(8.8)

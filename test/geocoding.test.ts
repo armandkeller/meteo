@@ -50,7 +50,11 @@ describe('parseGeocoding', () => {
   it('ignore les résultats sans coordonnées ou sans nom', () => {
     expect(
       parseGeocoding({
-        results: [{ ...quebec, latitude: undefined }, { ...quebec, name: '' }, 'x'],
+        results: [
+          { ...quebec, latitude: undefined },
+          { ...quebec, name: '' },
+          'x',
+        ],
       }),
     ).toEqual([])
   })
@@ -58,7 +62,12 @@ describe('parseGeocoding', () => {
   it('complète pays et fuseau manquants', () => {
     const [location] = parseGeocoding({
       results: [
-        { ...quebec, country: undefined, admin1: undefined, timezone: undefined },
+        {
+          ...quebec,
+          country: undefined,
+          admin1: undefined,
+          timezone: undefined,
+        },
       ],
     })
     expect(location.country).toBe('CA')
@@ -94,7 +103,10 @@ describe('searchCities', () => {
   })
 
   it("lève une erreur si l'API répond en erreur", async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 500 })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('', { status: 500 })),
+    )
     await expect(searchCities('Paris')).rejects.toThrow('500')
   })
 })

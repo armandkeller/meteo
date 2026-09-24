@@ -14,8 +14,21 @@ est l'indice de confiance, pas la médiane seule.
 ## Commandes
 - Package manager : pnpm uniquement (jamais npm ni yarn)
 - `pnpm dev` / `pnpm build` / `pnpm test`
+- `pnpm lint` / `pnpm format:check` / `pnpm typecheck` : vérifs de la CI
+- `pnpm check` : corrige lint, imports et format (Biome)
 - Ajouter une dépendance : `pnpm add <paquet>` (`-D` pour le dev)
 - Exécuter un outil ponctuel : `pnpm dlx <outil>`
+
+## Workflow Git et déploiement
+- Jamais de commit direct sur `main` : toujours une branche puis une PR
+- CI (`.github/workflows/ci.yml`) sur chaque PR vers `main` : lint,
+  format, typage, tests, build. Merge uniquement si elle est verte.
+- CD (`.github/workflows/cd.yml`) au merge dans `main` : revalidation
+  puis déploiement en production via le CLI Vercel (secrets GitHub
+  `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`)
+- Le déploiement automatique de Vercel sur push est désactivé
+  (`vercel.json`, `git.deploymentEnabled: false`) : ne pas le réactiver
+- Serveur : Nitro (`nitro/vite`), preset Vercel en CD
 
 ## Périmètre du MVP
 - Recherche de ville dans le monde entier (API de géocodage Open-Meteo)

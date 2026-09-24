@@ -34,7 +34,10 @@ export function formatDateTimeDay(isoTime: string, timeZone: string): string {
 }
 
 // "mercredi 23 septembre" à partir d'une date locale AAAA-MM-JJ.
-export function formatLocalDate(date: string, style: 'long' | 'short' = 'long'): string {
+export function formatLocalDate(
+  date: string,
+  style: 'long' | 'short' = 'long',
+): string {
   // Midi UTC : la date affichée ne dépend d'aucun fuseau.
   return formatter('UTC', {
     weekday: style,

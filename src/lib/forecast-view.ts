@@ -1,15 +1,15 @@
 import type { AggregatedValue, NormalizedForecast } from '../types/forecast'
+import type { Confidence, DailyField, ForecastField } from './aggregate'
 import {
+  aggregateByDay,
+  aggregateByHour,
+  confidence,
   DAILY_FIELDS,
   DAILY_SPREAD_THRESHOLDS,
   FORECAST_FIELDS,
   HOURLY_SPREAD_THRESHOLDS,
-  aggregateByDay,
-  aggregateByHour,
-  confidence,
   localDate,
 } from './aggregate'
-import type { Confidence, DailyField, ForecastField } from './aggregate'
 
 // Nombre de jours (dates locales) présentés comme prévision principale.
 // Les jours suivants sont affichés à part, avec une confiance réduite.
@@ -80,7 +80,11 @@ export function buildForecastView(
       }
       values[field] = {
         ...value,
-        confidence: confidence(value, HOURLY_SPREAD_THRESHOLDS[field], extended),
+        confidence: confidence(
+          value,
+          HOURLY_SPREAD_THRESHOLDS[field],
+          extended,
+        ),
       }
     }
     return { time, date, extended, values }

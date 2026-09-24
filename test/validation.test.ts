@@ -8,7 +8,9 @@ import {
 describe('validateCityQuery', () => {
   it('nettoie et tronque la requête', () => {
     expect(validateCityQuery({ query: '  Lyon ' })).toEqual({ query: 'Lyon' })
-    expect(validateCityQuery({ query: 'x'.repeat(300) }).query).toHaveLength(100)
+    expect(validateCityQuery({ query: 'x'.repeat(300) }).query).toHaveLength(
+      100,
+    )
   })
 
   it('refuse une entrée invalide', () => {
@@ -26,8 +28,12 @@ describe('validateForecastInput', () => {
 
   it('refuse des coordonnées hors limites ou non numériques', () => {
     expect(() => validateForecastInput({ ...ok, lat: 91 })).toThrow('Latitude')
-    expect(() => validateForecastInput({ ...ok, lon: -181 })).toThrow('Longitude')
-    expect(() => validateForecastInput({ ...ok, lat: '46' })).toThrow('Latitude')
+    expect(() => validateForecastInput({ ...ok, lon: -181 })).toThrow(
+      'Longitude',
+    )
+    expect(() => validateForecastInput({ ...ok, lat: '46' })).toThrow(
+      'Latitude',
+    )
     expect(() => validateForecastInput({ ...ok, lon: Number.NaN })).toThrow()
   })
 
