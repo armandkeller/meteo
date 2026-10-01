@@ -51,15 +51,31 @@ export function median(values: (number | null)[]): number | null {
     : (sorted[mid - 1] + sorted[mid]) / 2
 }
 
+// Seuil à partir duquel un modèle prévoit de la pluie (mm). Les modèles
+// se décalent souvent de quelques heures : la médiane horaire tombe alors
+// à 0 alors que plusieurs modèles prévoient de la pluie. Le nombre de
+// modèles au-dessus du seuil montre ce que la médiane cache.
+export const HOURLY_WET_THRESHOLDS: Partial<Record<ForecastField, number>> = {
+  precip: 0.1, // mm dans l'heure
+}
+
 // Médiane / min / max / nombre de modèles, en ignorant les null.
-export function summarize(values: (number | null)[]): AggregatedValue {
+// `wetThreshold` : compte aussi les modèles qui l'atteignent (wetCount).
+export function summarize(
+  values: (number | null)[],
+  wetThreshold?: number,
+): AggregatedValue {
   const available = values.filter((v): v is number => v !== null)
-  return {
+  const result: AggregatedValue = {
     median: median(available),
     min: available.length > 0 ? Math.min(...available) : null,
     max: available.length > 0 ? Math.max(...available) : null,
     modelCount: available.length,
   }
+  if (wetThreshold !== undefined) {
+    result.wetCount = available.filter((v) => v >= wetThreshold).length
+  }
+  return result
 }
 
 // Regroupe par heure et calcule médiane / min / max / nombre de modèles.
@@ -79,7 +95,10 @@ export function aggregateByHour(
   const result = new Map<string, AggregatedValue>()
   const hours = [...valuesByHour.keys()].sort()
   for (const time of hours) {
-    result.set(time, summarize(valuesByHour.get(time) ?? []))
+    result.set(
+      time,
+      summarize(valuesByHour.get(time) ?? [], HOURLY_WET_THRESHOLDS[field]),
+    )
   }
   return result
 }
@@ -131,6 +150,11 @@ export const DAILY_SPREAD_THRESHOLDS: Record<DailyField, SpreadThresholds> = {
   windGustsMax: [15, 30], // km/h
 }
 
+// Jour de pluie : au moins 1 mm sur la journée (convention usuelle).
+export const DAILY_WET_THRESHOLDS: Partial<Record<DailyField, number>> = {
+  precip: 1,
+}
+
 type DailyReducer = {
   field: ForecastField
   reduce: (values: number[]) => number
@@ -170,6 +194,20 @@ export function localDate(isoTime: string, timeZone: string): string {
   return formatter.format(new Date(isoTime))
 }
 
+// localDate mémoïsée : une conversion de fuseau par heure distincte,
+// et non par ligne (6 modèles × ~400 heures).
+export function localDateMemo(timeZone: string): (isoTime: string) => string {
+  const cache = new Map<string, string>()
+  return (isoTime) => {
+    let date = cache.get(isoTime)
+    if (date === undefined) {
+      date = localDate(isoTime, timeZone)
+      cache.set(isoTime, date)
+    }
+    return date
+  }
+}
+
 // Calcule d'abord la valeur journalière de chaque modèle (min, max, cumul),
 // puis la médiane entre modèles : la somme des médianes horaires n'est pas
 // la médiane des cumuls. Un modèle ne compte pour un jour que s'il a une
@@ -179,10 +217,11 @@ export function aggregateByDay(
   forecasts: NormalizedForecast[],
   timeZone: string,
 ): DailyAggregate[] {
+  const dateOf = localDateMemo(timeZone)
   const hoursByDate = new Map<string, Set<string>>()
   const byDateAndSource = new Map<string, Map<string, NormalizedForecast[]>>()
   for (const forecast of forecasts) {
-    const date = localDate(forecast.time, timeZone)
+    const date = dateOf(forecast.time)
     const hours = hoursByDate.get(date) ?? new Set<string>()
     hours.add(forecast.time)
     hoursByDate.set(date, hours)
@@ -209,7 +248,7 @@ export function aggregateByDay(
           .filter((v): v is number => v !== null)
         perModel.push(hourly.length === hourCount ? reduce(hourly) : null)
       }
-      values[dailyField] = summarize(perModel)
+      values[dailyField] = summarize(perModel, DAILY_WET_THRESHOLDS[dailyField])
     }
     return { date, hourCount, values }
   })

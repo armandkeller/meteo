@@ -70,7 +70,9 @@ wind_speed_10m, wind_gusts_10m
   d'entrée vers les API) ; validation dans `src/lib/validation.ts`
 - `src/providers/index.ts` : liste des providers
 - Ajouter une source = ajouter un provider et l'inscrire dans
-  `src/providers/index.ts`, rien d'autre ne change
+  `src/providers/index.ts`, rien d'autre ne change. Contrainte : le
+  provider doit renvoyer toute la journée locale en cours, heures passées
+  comprises, sinon il est écarté du résumé du jour 1.
 
 ## Format normalisé
 ```ts
@@ -98,6 +100,12 @@ type NormalizedForecast = {
 - Ignorer les `null` dans les calculs, ne jamais les traiter comme 0
 - Moins de 3 modèles disponibles : afficher "confiance faible"
   quel que soit l'écart
+- Pluie : la médiane horaire tombe à 0 dès que les modèles se décalent
+  de quelques heures (mesuré le 2026-10-01 contre les METAR : elle rate
+  ~40 % des heures pluvieuses). On affiche donc aussi le nombre de
+  modèles qui prévoient des précipitations (`wetCount` : ≥ 0,1 mm/h,
+  ≥ 1 mm/jour). `precip` inclut la neige : parler de précipitations,
+  pas de pluie. Ce n'est pas une probabilité : ne pas l'appeler ainsi.
 
 ## Horizon et nombre de modèles
 - Les modèles n'ont pas tous le même horizon. Mesuré le 2026-09-23
@@ -120,7 +128,14 @@ type NormalizedForecast = {
   `timezone` du géocodage), pas dans celui du navigateur.
 - `forecast_days` démarre à minuit UTC du jour courant, pas à l'heure
   courante (vérifié par un vrai appel) : les heures passées sont
-  écartées côté serveur (`currentHourIso` dans `buildForecastView`).
+  écartées du détail horaire côté serveur (`currentHourIso` dans
+  `buildForecastView`), mais le résumé journalier garde toute la
+  journée locale en cours (sinon le max du jour = max des heures
+  restantes). `past_days=1` fournit le début de cette journée pour les
+  fuseaux à l'est de Greenwich.
+- `ecmwf_ifs025` est en pas de 3 h (cumuls étalés sur 3 heures).
+  `ecmwf_ifs` (9 km, horaire sur ~3 jours) existe, mais n'a rien
+  amélioré contre les observations le 2026-10-01 : pas changé.
 - `precipitation` = somme de l'heure précédente. Si MET Norway est
   ajouté un jour : il donne l'heure suivante (`next_1_hours`),
   il faudra réaligner d'une heure.

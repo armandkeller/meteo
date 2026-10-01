@@ -93,7 +93,7 @@ describe('buildForecastView', () => {
     expect(late?.values.temp.confidence).toBe('faible')
   })
 
-  it('écarte les heures passées', () => {
+  it('écarte les heures passées du détail horaire', () => {
     const view = buildForecastView(
       series(1, ['a']),
       'UTC',
@@ -102,7 +102,78 @@ describe('buildForecastView', () => {
     )
     expect(view.hourly[0].time).toBe('2026-09-23T10:00:00.000Z')
     expect(view.hourly).toHaveLength(14)
-    expect(view.daily[0].hourCount).toBe(14)
+  })
+
+  it('garde toute la journée en cours dans le résumé journalier', () => {
+    // Max à 13 h UTC, il est 18 h UTC : le max du jour reste celui de 13 h
+    const start = Date.parse('2026-09-23T00:00:00.000Z')
+    const forecasts = ['a', 'b', 'c'].flatMap((source) =>
+      Array.from({ length: 48 }, (_, h) =>
+        forecast(source, new Date(start + h * 3600_000).toISOString(), {
+          temp: h === 13 ? 25 : 15,
+        }),
+      ),
+    )
+    const view = buildForecastView(
+      forecasts,
+      'UTC',
+      [],
+      '2026-09-23T18:00:00.000Z',
+    )
+    expect(view.daily[0]).toMatchObject({ date: '2026-09-23', hourCount: 24 })
+    expect(view.daily[0].values.tempMax.median).toBe(25)
+  })
+
+  it('écarte la veille locale, même si elle est encore dans la réponse', () => {
+    // Paris (UTC+2) : le 23 commence le 22 à 22:00 UTC (past_days=1)
+    const start = Date.parse('2026-09-22T00:00:00.000Z')
+    const forecasts = Array.from({ length: 72 }, (_, h) =>
+      forecast('a', new Date(start + h * 3600_000).toISOString(), { temp: 15 }),
+    )
+    const view = buildForecastView(
+      forecasts,
+      'Europe/Paris',
+      [],
+      '2026-09-23T10:00:00.000Z',
+    )
+    expect(view.daily[0]).toMatchObject({ date: '2026-09-23', hourCount: 24 })
+    expect(view.hourly[0].time).toBe('2026-09-23T10:00:00.000Z')
+  })
+
+  it('transmet le nombre de modèles avec précipitations', () => {
+    // 2 modèles sur 5 prévoient de la pluie, à des heures différentes :
+    // médiane horaire à 0, mais wetCount le signale
+    const forecasts = ['a', 'b', 'c', 'd', 'e'].flatMap((source, i) =>
+      series(1, [source]).map((f, h) => ({
+        ...f,
+        precip: (i === 0 && h === 3) || (i === 1 && h === 15) ? 2 : 0,
+      })),
+    )
+    const view = buildForecastView(forecasts, 'UTC')
+    expect(view.hourly[3].values.precip).toMatchObject({
+      median: 0,
+      wetCount: 1,
+      modelCount: 5,
+    })
+    expect(view.daily[0].values.precip).toMatchObject({
+      median: 0,
+      wetCount: 2,
+    })
+  })
+
+  it('liste les modèles de la journée, heures passées comprises', () => {
+    // b ne fournit que le début de la journée, déjà passé
+    const forecasts = [
+      ...series(1, ['a']),
+      forecast('b', '2026-09-23T02:00:00.000Z', { temp: 10 }),
+    ]
+    const view = buildForecastView(
+      forecasts,
+      'UTC',
+      [],
+      '2026-09-23T10:00:00.000Z',
+    )
+    expect(view.models).toEqual(['a', 'b'])
   })
 
   it('transmet les sources en échec', () => {

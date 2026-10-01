@@ -27,4 +27,6 @@ export type AggregatedValue = {
   min: number | null
   max: number | null
   modelCount: number
+  // Précipitations seulement : modèles au-dessus du seuil de pluie
+  wetCount?: number
 }

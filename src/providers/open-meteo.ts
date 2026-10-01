@@ -26,6 +26,8 @@ export const HOURLY_VARIABLES = [
 ] as const
 
 // Pas de paramètre timezone : les heures restent en UTC.
+// past_days=1 : à l'est de Greenwich, la journée locale en cours commence
+// la veille en UTC ; sans ces heures, le résumé du jour serait tronqué.
 export function buildUrl(lat: number, lon: number, forecastDays = 16): string {
   const params = new URLSearchParams({
     latitude: String(lat),
@@ -33,6 +35,7 @@ export function buildUrl(lat: number, lon: number, forecastDays = 16): string {
     hourly: HOURLY_VARIABLES.join(','),
     models: MODELS.join(','),
     forecast_days: String(forecastDays),
+    past_days: '1',
   })
   return `${BASE_URL}?${params}`
 }

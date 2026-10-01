@@ -5,6 +5,7 @@ import {
   confidence,
   HOURLY_SPREAD_THRESHOLDS,
   localDate,
+  localDateMemo,
   median,
   summarize,
 } from '../src/lib/aggregate'
@@ -123,6 +124,7 @@ describe('aggregateByHour', () => {
       min: 0.2,
       max: 0.6,
       modelCount: 2,
+      wetCount: 2,
     })
   })
 
@@ -166,6 +168,30 @@ describe('aggregateByHour', () => {
   })
 })
 
+describe('aggregateByHour : pluie', () => {
+  it('révèle la pluie que la médiane horaire met à 0', () => {
+    // 2 modèles sur 5 prévoient de la pluie à cette heure : médiane 0
+    const time = '2026-09-23T12:00:00.000Z'
+    const result = aggregateByHour(
+      [0, 0, 0, 1.2, 3].map((precip, i) =>
+        forecast(String(i), time, { precip }),
+      ),
+      'precip',
+    ).get(time)
+    expect(result?.median).toBe(0)
+    expect(result?.wetCount).toBe(2)
+  })
+
+  it('ne compte pas wetCount pour les autres variables', () => {
+    const time = '2026-09-23T12:00:00.000Z'
+    const result = aggregateByHour(
+      [forecast('a', time, { temp: 5 })],
+      'temp',
+    ).get(time)
+    expect(result).not.toHaveProperty('wetCount')
+  })
+})
+
 describe('summarize', () => {
   it('calcule médiane, min, max et nombre de valeurs non nulles', () => {
     expect(summarize([4, null, 1, 2])).toEqual({
@@ -174,6 +200,14 @@ describe('summarize', () => {
       max: 4,
       modelCount: 3,
     })
+  })
+
+  it('compte les modèles qui atteignent le seuil de pluie', () => {
+    expect(summarize([0, 0.1, null, 2, 0.05], 0.1).wetCount).toBe(2)
+  })
+
+  it("n'ajoute pas wetCount sans seuil", () => {
+    expect(summarize([1, 2])).not.toHaveProperty('wetCount')
   })
 })
 
@@ -302,7 +336,20 @@ describe('aggregateByDay', () => {
       min: 0,
       max: 10,
       modelCount: 3,
+      wetCount: 2,
     })
+  })
+
+  it('compte un jour de précipitations à partir de 1 mm, seuil inclus', () => {
+    // Cumuls journaliers : a = 1 mm (compte), b = 0,9 mm (ne compte pas)
+    const temps = day.map(() => 15)
+    const spread = (total: number) => day.map((_, i) => (i === 0 ? total : 0))
+    const [result] = aggregateByDay(
+      [...model('a', temps, spread(1)), ...model('b', temps, spread(0.9))],
+      'UTC',
+    )
+    expect(result.values.precip.wetCount).toBe(1)
+    expect(result.values.tempMax).not.toHaveProperty('wetCount')
   })
 
   it("exclut un modèle dont la journée est incomplète (fin d'horizon)", () => {
@@ -323,5 +370,14 @@ describe('aggregateByDay', () => {
       ['2026-09-23', 22],
       ['2026-09-24', 2],
     ])
+  })
+})
+
+describe('localDateMemo', () => {
+  it('donne le même résultat que localDate', () => {
+    const dateOf = localDateMemo('America/Toronto')
+    const time = '2026-09-24T03:00:00.000Z'
+    expect(dateOf(time)).toBe(localDate(time, 'America/Toronto'))
+    expect(dateOf(time)).toBe('2026-09-23')
   })
 })

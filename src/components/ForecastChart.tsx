@@ -139,6 +139,12 @@ export function ForecastChart({ hourly, field, timeZone }: Props) {
                     {v.modelCount} modèle{v.modelCount > 1 ? 's' : ''} ·{' '}
                     {CONFIDENCE_LABELS[v.confidence]}
                   </div>
+                  {v.wetCount !== undefined && v.modelCount > 0 && (
+                    <div className="text-sky-700">
+                      Précipitations prévues par {v.wetCount} modèle
+                      {v.wetCount > 1 ? 's' : ''} sur {v.modelCount}
+                    </div>
+                  )}
                 </div>
               )
             }}

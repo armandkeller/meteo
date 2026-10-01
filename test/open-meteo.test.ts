@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { MODELS, normalize } from '../src/providers/open-meteo'
+import { buildUrl, MODELS, normalize } from '../src/providers/open-meteo'
 import fixture from './fixtures/openmeteo-quebec-sec.json'
+
+describe('buildUrl', () => {
+  it('demande la veille pour couvrir la journée locale en cours', () => {
+    const params = new URL(buildUrl(48.85, 2.35)).searchParams
+    expect(params.get('past_days')).toBe('1')
+    expect(params.get('forecast_days')).toBe('16')
+    expect(params.has('timezone')).toBe(false)
+  })
+})
 
 describe('normalize', () => {
   describe('fixture openmeteo-quebec-sec.json', () => {
