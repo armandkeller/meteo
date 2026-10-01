@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import type { DailyField, ForecastField } from '#/lib/aggregate'
 import { DAILY_FIELDS, FORECAST_FIELDS } from '#/lib/aggregate'
 import type { FieldMeta } from '#/lib/fields'
@@ -14,6 +15,9 @@ import {
   formatWithUnit,
 } from '#/lib/format'
 import { ConfidenceDot } from './Confidence'
+
+const HOURLY_WET_LABEL = "au moins 0,1 mm dans l'heure"
+const DAILY_WET_LABEL = 'au moins 1 mm sur la journée'
 
 function describe(value: RatedValue, meta: FieldMeta): string {
   const parts = [CONFIDENCE_LABELS[value.confidence]]
@@ -37,6 +41,44 @@ function ValueCell({ value, meta }: { value: RatedValue; meta: FieldMeta }) {
         {value.modelCount > 0 && <ConfidenceDot level={value.confidence} />}
       </span>
     </td>
+  )
+}
+
+// Part des modèles qui prévoient de la pluie : la médiane horaire tombe
+// à 0 dès que les modèles se décalent de quelques heures.
+function WetCell({ value, label }: { value: RatedValue; label: string }) {
+  if (value.wetCount === undefined || value.modelCount === 0) {
+    return <td className="px-2 py-1.5 text-right text-slate-400">–</td>
+  }
+  const share = value.wetCount / value.modelCount
+  const tone =
+    value.wetCount === 0
+      ? 'text-slate-400'
+      : share >= 0.5
+        ? 'font-medium text-sky-700'
+        : 'text-sky-600'
+  return (
+    <td
+      className={`px-2 py-1.5 text-right tabular-nums ${tone}`}
+      title={`${value.wetCount} modèle${value.wetCount > 1 ? 's' : ''} sur ${value.modelCount} prévoi${value.wetCount > 1 ? 'ent' : 't'} ${label}`}
+    >
+      {value.wetCount}/{value.modelCount}
+    </td>
+  )
+}
+
+function WetHeaderCell({ label }: { label: string }) {
+  return (
+    <th
+      scope="col"
+      className="px-2 py-2 text-right font-medium whitespace-nowrap"
+      title={`Nombre de modèles qui prévoient ${label}`}
+    >
+      Pluie ?
+      <span className="block text-[10px] font-normal text-slate-400">
+        modèles
+      </span>
+    </th>
   )
 }
 
@@ -97,7 +139,12 @@ export function HourlyTable({
                     Heure
                   </th>
                   {FORECAST_FIELDS.map((field) => (
-                    <HeaderCell key={field} meta={HOURLY_FIELD_META[field]} />
+                    <Fragment key={field}>
+                      <HeaderCell meta={HOURLY_FIELD_META[field]} />
+                      {field === 'precip' && (
+                        <WetHeaderCell label={HOURLY_WET_LABEL} />
+                      )}
+                    </Fragment>
                   ))}
                   <th scope="col" className="px-2 py-2 text-right font-medium">
                     Modèles
@@ -114,11 +161,18 @@ export function HourlyTable({
                       {formatHour(point.time, timeZone)}
                     </th>
                     {FORECAST_FIELDS.map((field: ForecastField) => (
-                      <ValueCell
-                        key={field}
-                        value={point.values[field]}
-                        meta={HOURLY_FIELD_META[field]}
-                      />
+                      <Fragment key={field}>
+                        <ValueCell
+                          value={point.values[field]}
+                          meta={HOURLY_FIELD_META[field]}
+                        />
+                        {field === 'precip' && (
+                          <WetCell
+                            value={point.values.precip}
+                            label={HOURLY_WET_LABEL}
+                          />
+                        )}
+                      </Fragment>
                     ))}
                     <td className="px-2 py-1.5 text-right text-slate-500 tabular-nums">
                       {point.values.temp.modelCount}
@@ -144,7 +198,12 @@ export function DailyTable({ daily }: { daily: DailyPoint[] }) {
               Jour
             </th>
             {DAILY_FIELDS.map((field: DailyField) => (
-              <HeaderCell key={field} meta={DAILY_FIELD_META[field]} />
+              <Fragment key={field}>
+                <HeaderCell meta={DAILY_FIELD_META[field]} />
+                {field === 'precip' && (
+                  <WetHeaderCell label={DAILY_WET_LABEL} />
+                )}
+              </Fragment>
             ))}
             <th scope="col" className="px-2 py-2 text-right font-medium">
               Modèles
@@ -171,11 +230,18 @@ export function DailyTable({ daily }: { daily: DailyPoint[] }) {
                 )}
               </th>
               {DAILY_FIELDS.map((field) => (
-                <ValueCell
-                  key={field}
-                  value={day.values[field]}
-                  meta={DAILY_FIELD_META[field]}
-                />
+                <Fragment key={field}>
+                  <ValueCell
+                    value={day.values[field]}
+                    meta={DAILY_FIELD_META[field]}
+                  />
+                  {field === 'precip' && (
+                    <WetCell
+                      value={day.values.precip}
+                      label={DAILY_WET_LABEL}
+                    />
+                  )}
+                </Fragment>
               ))}
               <td className="px-2 py-1.5 text-right text-slate-500 tabular-nums">
                 {day.values.tempMax.modelCount}

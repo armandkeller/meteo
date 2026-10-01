@@ -123,6 +123,7 @@ describe('aggregateByHour', () => {
       min: 0.2,
       max: 0.6,
       modelCount: 2,
+      wetCount: 2,
     })
   })
 
@@ -166,6 +167,30 @@ describe('aggregateByHour', () => {
   })
 })
 
+describe('aggregateByHour : pluie', () => {
+  it('révèle la pluie que la médiane horaire met à 0', () => {
+    // 2 modèles sur 5 prévoient de la pluie à cette heure : médiane 0
+    const time = '2026-09-23T12:00:00.000Z'
+    const result = aggregateByHour(
+      [0, 0, 0, 1.2, 3].map((precip, i) =>
+        forecast(String(i), time, { precip }),
+      ),
+      'precip',
+    ).get(time)
+    expect(result?.median).toBe(0)
+    expect(result?.wetCount).toBe(2)
+  })
+
+  it('ne compte pas wetCount pour les autres variables', () => {
+    const time = '2026-09-23T12:00:00.000Z'
+    const result = aggregateByHour(
+      [forecast('a', time, { temp: 5 })],
+      'temp',
+    ).get(time)
+    expect(result).not.toHaveProperty('wetCount')
+  })
+})
+
 describe('summarize', () => {
   it('calcule médiane, min, max et nombre de valeurs non nulles', () => {
     expect(summarize([4, null, 1, 2])).toEqual({
@@ -174,6 +199,14 @@ describe('summarize', () => {
       max: 4,
       modelCount: 3,
     })
+  })
+
+  it('compte les modèles qui atteignent le seuil de pluie', () => {
+    expect(summarize([0, 0.1, null, 2, 0.05], 0.1).wetCount).toBe(2)
+  })
+
+  it("n'ajoute pas wetCount sans seuil", () => {
+    expect(summarize([1, 2])).not.toHaveProperty('wetCount')
   })
 })
 
@@ -302,6 +335,7 @@ describe('aggregateByDay', () => {
       min: 0,
       max: 10,
       modelCount: 3,
+      wetCount: 2,
     })
   })
 
