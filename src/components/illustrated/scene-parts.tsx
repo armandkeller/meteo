@@ -327,7 +327,10 @@ function NuageuxArt({ mood }: ArtProps) {
   return (
     <>
       <g transform="translate(70 22) scale(0.66)">
-        <g className="scene-drift-back">
+        <g
+          className="scene-drift"
+          style={{ animationDuration: '8s', animationDirection: 'reverse' }}
+        >
           <Cloud fill="#bfcadb" />
         </g>
       </g>
@@ -396,7 +399,8 @@ function VentArt({ mood }: ArtProps) {
         <Face x={104} y={130} mood={mood} expression="puff" />
       </g>
       <g
-        className="scene-swoosh"
+        className="scene-drift"
+        style={{ animationDuration: '1.4s' }}
         fill="none"
         stroke="#2f9c7a"
         strokeWidth={7}

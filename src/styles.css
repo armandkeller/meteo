@@ -76,14 +76,6 @@ body {
   animation: scene-drift 7s ease-in-out infinite;
 }
 
-.scene-drift-back {
-  animation: scene-drift 8s ease-in-out infinite reverse;
-}
-
-.scene-swoosh {
-  animation: scene-drift 1.4s ease-in-out infinite;
-}
-
 .scene-fall {
   animation: scene-fall 1s linear infinite;
 }
@@ -101,14 +93,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scene-spin,
-  .scene-drift,
-  .scene-drift-back,
-  .scene-swoosh,
-  .scene-fall,
-  .scene-fall-slow,
-  .scene-bob,
-  .scene-twinkle {
+  [class*="scene-"] {
     animation: none;
   }
 }

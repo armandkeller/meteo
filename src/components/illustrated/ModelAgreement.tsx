@@ -1,7 +1,7 @@
 import type { Confidence } from '#/lib/aggregate'
 import { wetText } from '#/lib/illustrated-view'
 
-const AGREEMENT_BG: Record<Confidence, string> = {
+export const AGREEMENT_BG: Record<Confidence, string> = {
   elevee: 'bg-agree-high',
   moyenne: 'bg-agree-mid',
   faible: 'bg-agree-low',

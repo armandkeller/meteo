@@ -93,13 +93,7 @@ export const SCENE_THRESHOLDS = {
 const CONFIDENCE_ORDER: Confidence[] = ['faible', 'moyenne', 'elevee']
 
 export function worstConfidence(levels: Confidence[]): Confidence {
-  let worst: Confidence = 'elevee'
-  for (const level of levels) {
-    if (CONFIDENCE_ORDER.indexOf(level) < CONFIDENCE_ORDER.indexOf(worst)) {
-      worst = level
-    }
-  }
-  return worst
+  return CONFIDENCE_ORDER.find((c) => levels.includes(c)) ?? 'elevee'
 }
 
 export function sceneMood(confidence: Confidence): SceneMood {
@@ -159,13 +153,6 @@ export function dayConfidence(day: DailyPoint): Confidence {
   ])
 }
 
-export function hourConfidence(hour: HourlyPoint): Confidence {
-  return worstConfidence([
-    hour.values.temp.confidence,
-    hour.values.precip.confidence,
-  ])
-}
-
 // `dayLength` : durée du jour en secondes (voir sun.ts).
 export function dailyScene(day: DailyPoint, dayLength: number): Scene {
   const { values } = day
@@ -197,7 +184,9 @@ export function dailyScene(day: DailyPoint, dayLength: number): Scene {
 export function hourlyScene(hour: HourlyPoint, isDay: boolean): Scene {
   const { values } = hour
   const t = SCENE_THRESHOLDS.hourly
-  const mood = sceneMood(hourConfidence(hour))
+  const mood = sceneMood(
+    worstConfidence([values.temp.confidence, values.precip.confidence]),
+  )
   const night = !isDay
   const weather = weatherKind(
     values.snowfall,

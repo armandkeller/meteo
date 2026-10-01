@@ -2,15 +2,14 @@ import type { Confidence } from '#/lib/aggregate'
 import { formatDegrees, formatLocalDate } from '#/lib/format'
 import type { SceneDay } from '#/lib/illustrated-view'
 import { wetText } from '#/lib/illustrated-view'
-import { DropIcon } from './ModelAgreement'
+import { AGREEMENT_BG, DropIcon } from './ModelAgreement'
 import { Scene } from './Scene'
 
-const CONFIDENCE_TAG: Record<Confidence, { label: string; className: string }> =
-  {
-    elevee: { label: 'Sûr', className: 'bg-agree-high' },
-    moyenne: { label: 'Assez sûr', className: 'bg-agree-mid' },
-    faible: { label: 'Incertain', className: 'bg-agree-low' },
-  }
+const CONFIDENCE_TAG: Record<Confidence, string> = {
+  elevee: 'Sûr',
+  moyenne: 'Assez sûr',
+  faible: 'Incertain',
+}
 
 type DayCardsProps = {
   days: SceneDay[]
@@ -33,7 +32,6 @@ export function DayCards({ days, selected, today, onSelect }: DayCardsProps) {
       <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
         {days.map((day) => {
           const isSelected = day.date === selected
-          const tag = CONFIDENCE_TAG[day.confidence]
           return (
             <button
               key={day.date}
@@ -59,9 +57,9 @@ export function DayCards({ days, selected, today, onSelect }: DayCardsProps) {
                 </span>
               </span>
               <span
-                className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${tag.className}`}
+                className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${AGREEMENT_BG[day.confidence]}`}
               >
-                {tag.label}
+                {CONFIDENCE_TAG[day.confidence]}
               </span>
               <span className="inline-flex items-center gap-1 text-xs font-bold text-drop-text">
                 <DropIcon filled={day.wetCount > 0} size={12} />

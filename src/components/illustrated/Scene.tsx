@@ -21,7 +21,6 @@ type SceneProps = {
   mood?: SceneMood
   night?: boolean
   size?: number // px
-  framed?: boolean // fond coloré arrondi
   // Le libellé est déjà écrit à côté : masquée aux lecteurs d'écran
   decorative?: boolean
   className?: string
@@ -32,7 +31,6 @@ export function Scene({
   mood = 'sure',
   night = false,
   size = 96,
-  framed = true,
   decorative = false,
   className = '',
 }: SceneProps) {
@@ -41,11 +39,7 @@ export function Scene({
     mood === 'hesite'
       ? `${SCENE_LABELS[kind]} (les modèles hésitent)`
       : SCENE_LABELS[kind]
-  const background = !framed
-    ? undefined
-    : night && kind !== 'nuit'
-      ? NIGHT_BG
-      : SCENE_BG[kind]
+  const background = night && kind !== 'nuit' ? NIGHT_BG : SCENE_BG[kind]
   const a11y = decorative
     ? { 'aria-hidden': true }
     : { role: 'img', 'aria-label': label }
@@ -57,7 +51,7 @@ export function Scene({
         width: size,
         height: size,
         background,
-        borderRadius: framed ? Math.round(size * 0.24) : undefined,
+        borderRadius: Math.round(size * 0.24),
       }}
     >
       <svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true">
