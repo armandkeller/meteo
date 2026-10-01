@@ -1,5 +1,6 @@
 import type { ForecastView } from '#/lib/forecast-view'
 import { MAIN_FORECAST_DAYS } from '#/lib/forecast-view'
+import { ConfidenceLegend } from './Confidence'
 import { DailyTable, HourlyTable } from './ForecastTables'
 
 export function TablesSection({ view }: { view: ForecastView }) {
@@ -14,6 +15,11 @@ export function TablesSection({ view }: { view: ForecastView }) {
           Résumé des {MAIN_FORECAST_DAYS} prochains jours
         </h2>
         <DailyTable daily={mainDaily} />
+        {/* Explique les pastilles des tableaux (la légende du graphique
+            n'est plus sur la même vue) */}
+        <div className="mt-3">
+          <ConfidenceLegend />
+        </div>
       </section>
 
       <section className="mt-8">

@@ -2,6 +2,7 @@ import type { Confidence } from './aggregate'
 import type { DailyPoint, ForecastView, HourlyPoint } from './forecast-view'
 import type { Scene } from './scene'
 import {
+  agreementLabel,
   dailyScene,
   dayConfidence,
   hourlyScene,
@@ -11,7 +12,9 @@ import {
 import { dayLengthSeconds, isDaytime } from './sun'
 
 // Vue illustrée : la ForecastView réduite à ce que montrent les scènes.
-// Fonction pure, calculée côté client (aucun appel d'API).
+// Fonction pure, appelée côté serveur (getForecastFn) : le calcul solaire
+// (sun.ts) n'est pas refait dans le navigateur, où ses dernières décimales
+// pourraient différer et casser l'hydratation.
 
 export type SceneDay = Scene & {
   date: string
@@ -19,6 +22,7 @@ export type SceneDay = Scene & {
   label: string
   sentence: string
   confidence: Confidence
+  agreement: string // « Les modèles sont d'accord »…
   tempMax: number | null
   tempMin: number | null
   tempMaxSpread: number | null // écart max − min entre modèles (°C)
@@ -39,6 +43,7 @@ export type SceneHour = Scene & {
 }
 
 export type IllustratedView = {
+  today: string | undefined // date locale de l'heure en cours
   days: SceneDay[] // jours 1 à 7
   extended: SceneDay[] // jours 8 à 16 (tendance)
   hours: SceneHour[]
@@ -68,13 +73,18 @@ function sceneDay(day: DailyPoint, lat: number): SceneDay {
   const scene = dailyScene(day, dayLengthSeconds(lat, day.date))
   const mixed = scene.kind === 'pluie' && (values.snowfall.median ?? 0) > 0
   const { min, max } = values.tempMax
+  const confidence = dayConfidence(day)
   return {
     ...scene,
     date: day.date,
     extended: day.extended,
     label: mixed ? 'Pluie et neige' : SCENE_LABELS[scene.kind],
     sentence: SCENE_SENTENCES[scene.kind],
-    confidence: dayConfidence(day),
+    confidence,
+    agreement: agreementLabel(
+      confidence,
+      Math.min(values.tempMax.modelCount, values.precip.modelCount),
+    ),
     tempMax: values.tempMax.median,
     tempMin: values.tempMin.median,
     tempMaxSpread: min === null || max === null ? null : max - min,
@@ -108,6 +118,7 @@ export function buildIllustratedView(
     .filter((d) => d.hourCount >= MIN_DAY_HOURS)
     .map((d) => sceneDay(d, lat))
   return {
+    today: view.hourly[0]?.date,
     days: days.filter((d) => !d.extended),
     extended: days.filter((d) => d.extended),
     hours: view.hourly

@@ -7,9 +7,13 @@ import type {
   RatedValue,
 } from '../src/lib/forecast-view'
 import {
+  AGREEMENT_LABELS,
+  agreementLabel,
   dailyScene,
   hourlyScene,
+  isSnowy,
   sceneMood,
+  TOO_FEW_MODELS_LABEL,
   worstConfidence,
 } from '../src/lib/scene'
 
@@ -97,6 +101,17 @@ describe('dailyScene', () => {
     )
   })
 
+  it('montre de la neige pour des averses neigeuses', () => {
+    const scene = dailyScene(
+      day({
+        snowfall: { median: 0, max: 2 },
+        precip: { median: 0, max: 3, wetCount: 2, modelCount: 6 },
+      }),
+      DAY,
+    )
+    expect(scene.kind).toBe('neige')
+  })
+
   it('ignore une neige médiane trop faible', () => {
     expect(dailyScene(day({ snowfall: { median: 0.4 } }), DAY).kind).toBe(
       'nuageux',
@@ -135,15 +150,33 @@ describe('hourlyScene', () => {
     expect(hourlyScene(hour(), true).kind).toBe('nuageux')
   })
 
-  it('montre la lune la nuit quand le ciel est peu nuageux', () => {
-    expect(hourlyScene(hour({ cloudCover: { median: 50 } }), false)).toEqual({
+  it('montre la lune la nuit seulement quand le ciel est dégagé', () => {
+    expect(hourlyScene(hour({ cloudCover: { median: 10 } }), false)).toEqual({
       kind: 'nuit',
+      mood: 'sure',
+      night: true,
+    })
+    // Même seuil que le soleil le jour : 50 % n'est pas une nuit claire
+    expect(hourlyScene(hour({ cloudCover: { median: 50 } }), false)).toEqual({
+      kind: 'nuageux',
       mood: 'sure',
       night: true,
     })
     expect(hourlyScene(hour({ cloudCover: { median: 90 } }), false).kind).toBe(
       'nuageux',
     )
+  })
+
+  it('montre de la neige quand une neige faible rend les modèles mouillés', () => {
+    // 0,12 mm d'eau ≈ 0,08 cm de neige : sous le seuil de 0,1 cm
+    const snow = { median: 0.08, max: 0.09 }
+    const precip = { median: 0.12, max: 0.13, wetCount: 6, modelCount: 6 }
+    expect(hourlyScene(hour({ snowfall: snow, precip }), true).kind).toBe(
+      'neige',
+    )
+    expect(
+      hourlyScene(hour({ snowfall: { median: 0, max: 0 }, precip }), true).kind,
+    ).toBe('pluie')
   })
 
   it('garde les précipitations la nuit, en le signalant', () => {
@@ -164,6 +197,25 @@ describe('hourlyScene', () => {
     expect(
       hourlyScene(hour({ temp: { confidence: 'faible' } }), true).mood,
     ).toBe('hesite')
+  })
+})
+
+describe('isSnowy', () => {
+  it('compare la neige (en eau) aux précipitations', () => {
+    const value = (max: number | null) => rated({ max })
+    // 0,7 cm de neige = 1 mm d'eau
+    expect(isSnowy(value(0.7), value(2))).toBe(true)
+    expect(isSnowy(value(0.6), value(2))).toBe(false)
+    expect(isSnowy(value(1), value(0))).toBe(false)
+    expect(isSnowy(value(null), value(2))).toBe(false)
+  })
+})
+
+describe('agreementLabel', () => {
+  it('distingue le désaccord du manque de modèles', () => {
+    expect(agreementLabel('faible', 6)).toBe(AGREEMENT_LABELS.faible)
+    expect(agreementLabel('faible', 2)).toBe(TOO_FEW_MODELS_LABEL)
+    expect(agreementLabel('elevee', 3)).toBe(AGREEMENT_LABELS.elevee)
   })
 })
 

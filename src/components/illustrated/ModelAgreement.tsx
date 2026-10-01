@@ -1,6 +1,5 @@
 import type { Confidence } from '#/lib/aggregate'
 import { wetText } from '#/lib/illustrated-view'
-import { AGREEMENT_LABELS } from '#/lib/scene'
 
 const AGREEMENT_BG: Record<Confidence, string> = {
   elevee: 'bg-agree-high',
@@ -51,6 +50,7 @@ export function WetDrops({
 
 type ModelAgreementProps = {
   confidence: Confidence
+  label: string // voir agreementLabel (scene.ts)
   tempModelCount: number
   tempMaxSpread: number | null
   wetCount: number
@@ -59,6 +59,7 @@ type ModelAgreementProps = {
 
 export function ModelAgreement({
   confidence,
+  label,
   tempModelCount,
   tempMaxSpread,
   wetCount,
@@ -74,9 +75,7 @@ export function ModelAgreement({
       className={`flex flex-col gap-2.5 rounded-[22px] px-4.5 py-4 ${AGREEMENT_BG[confidence]}`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <strong className="font-display text-xl font-semibold">
-          {AGREEMENT_LABELS[confidence]}
-        </strong>
+        <strong className="font-display text-xl font-semibold">{label}</strong>
         <span className="text-sm font-semibold">
           {models}
           {spread}

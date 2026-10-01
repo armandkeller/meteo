@@ -1,4 +1,6 @@
+import type { AggregatedValue } from '../types/forecast'
 import type { Confidence } from './aggregate'
+import { MIN_MODELS_FOR_CONFIDENCE } from './aggregate'
 import type { DailyPoint, HourlyPoint } from './forecast-view'
 
 // Vue illustrée : une scène (un personnage) par heure ou par jour, choisie à
@@ -52,8 +54,25 @@ export const AGREEMENT_LABELS: Record<Confidence, string> = {
   faible: 'Les modèles ne sont pas d’accord',
 }
 
+// Confiance faible faute de modèles : ils ne sont pas en désaccord pour autant.
+export const TOO_FEW_MODELS_LABEL = 'Trop peu de modèles pour conclure'
+
+// `modelCount` : modèles disponibles pour les valeurs affichées (le plus
+// petit nombre si plusieurs variables).
+export function agreementLabel(
+  confidence: Confidence,
+  modelCount: number,
+): string {
+  return modelCount < MIN_MODELS_FOR_CONFIDENCE
+    ? TOO_FEW_MODELS_LABEL
+    : AGREEMENT_LABELS[confidence]
+}
+
+// Open-Meteo convertit la neige à raison de 0,7 cm par mm d'eau.
+export const SNOW_CM_PER_MM = 0.7
+
 // Seuils des scènes. Testés dans l'ordre : neige, pluie, averses, vent,
-// puis ciel (soleil / éclaircies / nuageux, ou nuit).
+// puis ciel (soleil / éclaircies / nuageux, ou nuit claire).
 export const SCENE_THRESHOLDS = {
   // Part des modèles qui prévoient des précipitations (wetCount)
   rainRatio: 2 / 3,
@@ -66,7 +85,7 @@ export const SCENE_THRESHOLDS = {
   },
   hourly: {
     snowfall: 0.1, // cm dans l'heure (médiane)
-    clearCloudCover: 30, // %
+    clearCloudCover: 30, // % (en dessous : soleil, ou nuit claire)
     partlyCloudCover: 70, // %
   },
 } as const
@@ -97,17 +116,36 @@ function atLeast(value: number | null, threshold: number): boolean {
   return value !== null && value >= threshold
 }
 
+// Précipitations surtout sous forme de neige : la neige du modèle le plus
+// enneigé (en eau) atteint la moitié des précipitations du plus arrosé.
+// Les médianes ne suffisent pas : une neige faible reste sous le seuil de
+// neige alors que les modèles sont « mouillés » (0,1 mm ≈ 0,07 cm).
+export function isSnowy(
+  snowfall: AggregatedValue,
+  precip: AggregatedValue,
+): boolean {
+  if (snowfall.max === null || precip.max === null || precip.max <= 0) {
+    return false
+  }
+  return snowfall.max / SNOW_CM_PER_MM >= precip.max / 2
+}
+
 // Scène commune aux heures et aux jours (précipitations, puis vent).
 function weatherKind(
-  snowfall: number | null,
+  snowfall: AggregatedValue,
   snowThreshold: number,
-  precip: { wetCount?: number; modelCount: number },
+  precip: AggregatedValue,
   gusts: number | null,
 ): SceneKind | null {
-  if (atLeast(snowfall, snowThreshold)) return 'neige'
+  if (atLeast(snowfall.median, snowThreshold)) return 'neige'
   const ratio = wetRatio(precip)
-  if (ratio >= SCENE_THRESHOLDS.rainRatio) return 'pluie'
-  if (ratio >= SCENE_THRESHOLDS.showerRatio) return 'averses'
+  const wet =
+    ratio >= SCENE_THRESHOLDS.rainRatio
+      ? 'pluie'
+      : ratio >= SCENE_THRESHOLDS.showerRatio
+        ? 'averses'
+        : null
+  if (wet) return isSnowy(snowfall, precip) ? 'neige' : wet
   if (atLeast(gusts, SCENE_THRESHOLDS.windGusts)) return 'vent'
   return null
 }
@@ -136,7 +174,7 @@ export function dailyScene(day: DailyPoint, dayLength: number): Scene {
     ? 'hesite'
     : sceneMood(dayConfidence(day))
   const weather = weatherKind(
-    values.snowfall.median,
+    values.snowfall,
     t.snowfall,
     values.precip,
     values.windGustsMax.median,
@@ -162,7 +200,7 @@ export function hourlyScene(hour: HourlyPoint, isDay: boolean): Scene {
   const mood = sceneMood(hourConfidence(hour))
   const night = !isDay
   const weather = weatherKind(
-    values.snowfall.median,
+    values.snowfall,
     t.snowfall,
     values.precip,
     values.windGusts.median,
@@ -174,7 +212,7 @@ export function hourlyScene(hour: HourlyPoint, isDay: boolean): Scene {
   if (cloud === null || cloud >= t.partlyCloudCover) {
     return { kind: 'nuageux', mood, night }
   }
-  if (night) return { kind: 'nuit', mood, night }
-  const kind: SceneKind = cloud < t.clearCloudCover ? 'soleil' : 'eclaircies'
-  return { kind, mood, night }
+  const clear = cloud < t.clearCloudCover
+  if (night) return { kind: clear ? 'nuit' : 'nuageux', mood, night }
+  return { kind: clear ? 'soleil' : 'eclaircies', mood, night }
 }

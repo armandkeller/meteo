@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { forecastService } from './forecast.server'
 import { buildForecastView, currentHourIso } from './forecast-view'
 import { searchCities } from './geocoding'
+import { buildIllustratedView } from './illustrated-view'
 import { validateCityQuery, validateForecastInput } from './validation'
 
 export const searchCitiesFn = createServerFn({ method: 'GET' })
@@ -15,10 +16,15 @@ export const getForecastFn = createServerFn({ method: 'GET' })
       data.lat,
       data.lon,
     )
-    return buildForecastView(
+    const view = buildForecastView(
       forecasts,
       data.timeZone,
       failures,
       currentHourIso(),
     )
+    // Scènes calculées ici, pas au rendu : voir illustrated-view.ts
+    return {
+      ...view,
+      illustrated: buildIllustratedView(view, data.lat, data.lon),
+    }
   })

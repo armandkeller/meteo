@@ -1,7 +1,7 @@
 import { DAILY_FIELD_META } from '#/lib/fields'
 import { formatDegrees, formatLocalDate, formatWithUnit } from '#/lib/format'
 import type { SceneDay } from '#/lib/illustrated-view'
-import { ModelAgreement } from './ModelAgreement'
+import { DropIcon, ModelAgreement } from './ModelAgreement'
 import { Scene } from './Scene'
 
 const SUNSHINE_HOURS = { ...DAILY_FIELD_META.sunshine, decimals: 0 }
@@ -35,12 +35,6 @@ const SunIcon = (
   <svg {...iconProps} stroke="#c27c00" aria-hidden="true">
     <circle cx="12" cy="12" r="4" />
     <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-  </svg>
-)
-
-const DropIconSmall = (
-  <svg {...iconProps} stroke="#3d86f0" aria-hidden="true">
-    <path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z" />
   </svg>
 )
 
@@ -92,7 +86,7 @@ export function HeroCard({
           <Chip icon={SunIcon}>
             Soleil {formatWithUnit(day.sunshine, SUNSHINE_HOURS)}
           </Chip>
-          <Chip icon={DropIconSmall}>
+          <Chip icon={<DropIcon filled size={18} />}>
             Précip. {formatWithUnit(day.precip, DAILY_FIELD_META.precip)}
           </Chip>
           {(day.snowfall ?? 0) >= 0.1 && (
@@ -107,6 +101,7 @@ export function HeroCard({
         </div>
         <ModelAgreement
           confidence={day.confidence}
+          label={day.agreement}
           tempModelCount={day.tempModelCount}
           tempMaxSpread={day.tempMaxSpread}
           wetCount={day.wetCount}

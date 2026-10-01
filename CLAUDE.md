@@ -78,7 +78,8 @@ wind_speed_10m, wind_gusts_10m
   - `src/lib/sun.ts` : jour/nuit et durée du jour par calcul
     astronomique (pas de `is_day` dans l'appel API), testé
   - `src/lib/illustrated-view.ts` : vue illustrée tirée de
-    `ForecastView`, calculée côté client, testée
+    `ForecastView`, calculée côté serveur dans `getForecastFn` (le calcul
+    solaire n'est pas refait au rendu, voir hydratation), testée
   - `src/components/illustrated/` : dessins (`Scene`) et blocs de la
     vue, sans règle métier. Valeurs SVG en constantes (pas de
     `Math.cos` au rendu) : sinon décalage d'hydratation serveur/client

@@ -5,34 +5,13 @@ import {
   RIBBON_HOURS,
   wetText,
 } from '../src/lib/illustrated-view'
-import { SCENE_LABELS } from '../src/lib/scene'
+import { SCENE_LABELS, TOO_FEW_MODELS_LABEL } from '../src/lib/scene'
 import { normalize } from '../src/providers/open-meteo'
 import type { NormalizedForecast } from '../src/types/forecast'
 import fixture from './fixtures/openmeteo-quebec-sec.json'
+import { forecast } from './helpers'
 
 const QUEBEC = { lat: 46.81, lon: -71.21 }
-
-function forecast(
-  source: string,
-  time: string,
-  values: Partial<NormalizedForecast> = {},
-): NormalizedForecast {
-  return {
-    source,
-    time,
-    temp: null,
-    apparentTemp: null,
-    humidity: null,
-    precip: null,
-    rain: null,
-    snowfall: null,
-    cloudCover: null,
-    sunshine: null,
-    windSpeed: null,
-    windGusts: null,
-    ...values,
-  }
-}
 
 // `hours` heures à partir du 1er octobre 00:00 UTC, pour `models` modèles
 function series(hours: number, models: string[]): NormalizedForecast[] {
@@ -74,6 +53,7 @@ describe('buildIllustratedView', () => {
 
     expect(illustrated.hours).toHaveLength(RIBBON_HOURS)
     expect(illustrated.hours[0].time).toBe(view.hourly[0].time)
+    expect(illustrated.today).toBe(view.hourly[0].date)
     // 48 h depuis minuit UTC : seule la journée locale du milieu est complète
     expect(illustrated.days).toHaveLength(1)
     expect(illustrated.extended).toHaveLength(0)
@@ -92,6 +72,13 @@ describe('buildIllustratedView', () => {
     expect(day.tempMin).toBe(source?.values.tempMin.median)
     expect(day.wetCount).toBe(0)
     expect(day.precipModelCount).toBe(source?.values.precip.modelCount)
+  })
+
+  it('signale le manque de modèles plutôt qu’un désaccord', () => {
+    const view = buildForecastView(series(24 * 3, ['a', 'b']), 'UTC')
+    const [day] = buildIllustratedView(view, QUEBEC.lat, QUEBEC.lon).days
+    expect(day.confidence).toBe('faible')
+    expect(day.agreement).toBe(TOO_FEW_MODELS_LABEL)
   })
 
   it('sépare les jours 8 à 16 et écarte la journée tronquée en fin d’horizon', () => {

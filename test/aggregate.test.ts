@@ -9,29 +9,7 @@ import {
   median,
   summarize,
 } from '../src/lib/aggregate'
-import type { NormalizedForecast } from '../src/types/forecast'
-
-function forecast(
-  source: string,
-  time: string,
-  values: Partial<NormalizedForecast> = {},
-): NormalizedForecast {
-  return {
-    source,
-    time,
-    temp: null,
-    apparentTemp: null,
-    humidity: null,
-    precip: null,
-    rain: null,
-    snowfall: null,
-    cloudCover: null,
-    sunshine: null,
-    windSpeed: null,
-    windGusts: null,
-    ...values,
-  }
-}
+import { forecast } from './helpers'
 
 describe('median', () => {
   it('retourne la valeur centrale pour un nombre impair de valeurs', () => {

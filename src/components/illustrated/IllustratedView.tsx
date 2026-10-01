@@ -1,27 +1,22 @@
-import { useMemo, useState } from 'react'
-import type { ForecastView } from '#/lib/forecast-view'
-import { buildIllustratedView } from '#/lib/illustrated-view'
+import { useState } from 'react'
+import type { IllustratedView as IllustratedViewData } from '#/lib/illustrated-view'
 import { DayCards } from './DayCards'
 import { ExtendedTrend } from './ExtendedTrend'
 import { HeroCard } from './HeroCard'
 import { HourRibbon } from './HourRibbon'
 
 type IllustratedViewProps = {
-  view: ForecastView
-  lat: number
-  lon: number
+  illustrated: IllustratedViewData // calculée côté serveur
+  timeZone: string
 }
 
-export function IllustratedView({ view, lat, lon }: IllustratedViewProps) {
-  const illustrated = useMemo(
-    () => buildIllustratedView(view, lat, lon),
-    [view, lat, lon],
-  )
+export function IllustratedView({
+  illustrated,
+  timeZone,
+}: IllustratedViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
-  const { days, extended, hours } = illustrated
+  const { days, extended, hours, today } = illustrated
   const hero = days.find((d) => d.date === selected) ?? days[0]
-  // Date locale de l'heure en cours (le détail horaire commence là)
-  const today = view.hourly[0]?.date
 
   return (
     <div className="flex flex-col gap-7 rounded-[36px] bg-ground p-3 font-rounded text-ink sm:p-6">
@@ -32,9 +27,7 @@ export function IllustratedView({ view, lat, lon }: IllustratedViewProps) {
           Pas assez de données pour illustrer cette prévision.
         </p>
       )}
-      {hours.length > 0 && (
-        <HourRibbon hours={hours} timeZone={view.timeZone} />
-      )}
+      {hours.length > 0 && <HourRibbon hours={hours} timeZone={timeZone} />}
       {hero && (
         <DayCards
           days={days}

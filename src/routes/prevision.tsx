@@ -152,7 +152,12 @@ function PrevisionPage() {
       </div>
 
       {mode === 'illu' && (
-        <IllustratedView view={view} lat={search.lat} lon={search.lon} />
+        // key : changer de ville réinitialise le jour sélectionné
+        <IllustratedView
+          key={`${search.lat},${search.lon}`}
+          illustrated={view.illustrated}
+          timeZone={view.timeZone}
+        />
       )}
       {mode === 'graph' && <ChartsSection view={view} />}
       {mode === 'table' && <TablesSection view={view} />}

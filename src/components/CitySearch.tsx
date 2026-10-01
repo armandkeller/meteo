@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
 import { MIN_QUERY_LENGTH } from '#/lib/geocoding'
 import { searchCitiesFn } from '#/lib/weather.functions'
@@ -16,6 +16,9 @@ function useDebounced<T>(value: T, delayMs: number): T {
 
 export function CitySearch({ autoFocus = false }: { autoFocus?: boolean }) {
   const navigate = useNavigate()
+  // Vue choisie sur la page prévision (illustrée, graphiques, tableaux) :
+  // conservée quand on change de ville
+  const { view } = useSearch({ strict: false })
   const inputId = useId()
   const listId = useId()
   const [query, setQuery] = useState('')
@@ -44,6 +47,7 @@ export function CitySearch({ autoFocus = false }: { autoFocus?: boolean }) {
         lat: location.latitude,
         lon: location.longitude,
         tz: location.timezone,
+        view,
       },
     })
   }

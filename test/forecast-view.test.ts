@@ -7,28 +7,7 @@ import {
 import { normalize } from '../src/providers/open-meteo'
 import type { NormalizedForecast } from '../src/types/forecast'
 import fixture from './fixtures/openmeteo-quebec-sec.json'
-
-function forecast(
-  source: string,
-  time: string,
-  values: Partial<NormalizedForecast> = {},
-): NormalizedForecast {
-  return {
-    source,
-    time,
-    temp: null,
-    apparentTemp: null,
-    humidity: null,
-    precip: null,
-    rain: null,
-    snowfall: null,
-    cloudCover: null,
-    sunshine: null,
-    windSpeed: null,
-    windGusts: null,
-    ...values,
-  }
-}
+import { forecast } from './helpers'
 
 // `days` jours de 24 h à partir du 23 septembre 00:00 UTC, pour `models` modèles
 function series(
