@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DAILY_FIELD_META, HOURLY_FIELD_META } from '../src/lib/fields'
 import {
+  formatDegrees,
   formatHour,
   formatLocalDate,
   formatValue,
@@ -52,5 +53,14 @@ describe('formatWithUnit', () => {
       '25 km/h',
     )
     expect(formatWithUnit(null, HOURLY_FIELD_META.windSpeed)).toBe('–')
+  })
+})
+
+describe('formatDegrees', () => {
+  it('arrondit au degré, sans "-0"', () => {
+    expect(formatDegrees(16.6)).toBe('17°')
+    expect(formatDegrees(-0.4)).toBe('0°')
+    expect(formatDegrees(-1.2)).toMatch(/^[-−]1°$/)
+    expect(formatDegrees(null)).toBe('–')
   })
 })
