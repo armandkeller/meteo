@@ -141,7 +141,7 @@ export function ForecastChart({ hourly, field, timeZone }: Props) {
                   </div>
                   {v.wetCount !== undefined && v.modelCount > 0 && (
                     <div className="text-sky-700">
-                      Pluie prévue par {v.wetCount} modèle
+                      Précipitations prévues par {v.wetCount} modèle
                       {v.wetCount > 1 ? 's' : ''} sur {v.modelCount}
                     </div>
                   )}

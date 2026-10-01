@@ -194,6 +194,20 @@ export function localDate(isoTime: string, timeZone: string): string {
   return formatter.format(new Date(isoTime))
 }
 
+// localDate mémoïsée : une conversion de fuseau par heure distincte,
+// et non par ligne (6 modèles × ~400 heures).
+export function localDateMemo(timeZone: string): (isoTime: string) => string {
+  const cache = new Map<string, string>()
+  return (isoTime) => {
+    let date = cache.get(isoTime)
+    if (date === undefined) {
+      date = localDate(isoTime, timeZone)
+      cache.set(isoTime, date)
+    }
+    return date
+  }
+}
+
 // Calcule d'abord la valeur journalière de chaque modèle (min, max, cumul),
 // puis la médiane entre modèles : la somme des médianes horaires n'est pas
 // la médiane des cumuls. Un modèle ne compte pour un jour que s'il a une
@@ -203,10 +217,11 @@ export function aggregateByDay(
   forecasts: NormalizedForecast[],
   timeZone: string,
 ): DailyAggregate[] {
+  const dateOf = localDateMemo(timeZone)
   const hoursByDate = new Map<string, Set<string>>()
   const byDateAndSource = new Map<string, Map<string, NormalizedForecast[]>>()
   for (const forecast of forecasts) {
-    const date = localDate(forecast.time, timeZone)
+    const date = dateOf(forecast.time)
     const hours = hoursByDate.get(date) ?? new Set<string>()
     hours.add(forecast.time)
     hoursByDate.set(date, hours)

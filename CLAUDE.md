@@ -70,7 +70,9 @@ wind_speed_10m, wind_gusts_10m
   d'entrée vers les API) ; validation dans `src/lib/validation.ts`
 - `src/providers/index.ts` : liste des providers
 - Ajouter une source = ajouter un provider et l'inscrire dans
-  `src/providers/index.ts`, rien d'autre ne change
+  `src/providers/index.ts`, rien d'autre ne change. Contrainte : le
+  provider doit renvoyer toute la journée locale en cours, heures passées
+  comprises, sinon il est écarté du résumé du jour 1.
 
 ## Format normalisé
 ```ts
@@ -101,8 +103,9 @@ type NormalizedForecast = {
 - Pluie : la médiane horaire tombe à 0 dès que les modèles se décalent
   de quelques heures (mesuré le 2026-10-01 contre les METAR : elle rate
   ~40 % des heures pluvieuses). On affiche donc aussi le nombre de
-  modèles qui prévoient de la pluie (`wetCount` : ≥ 0,1 mm/h,
-  ≥ 1 mm/jour). Ce n'est pas une probabilité : ne pas l'appeler ainsi.
+  modèles qui prévoient des précipitations (`wetCount` : ≥ 0,1 mm/h,
+  ≥ 1 mm/jour). `precip` inclut la neige : parler de précipitations,
+  pas de pluie. Ce n'est pas une probabilité : ne pas l'appeler ainsi.
 
 ## Horizon et nombre de modèles
 - Les modèles n'ont pas tous le même horizon. Mesuré le 2026-09-23

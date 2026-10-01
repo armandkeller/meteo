@@ -5,6 +5,7 @@ import {
   confidence,
   HOURLY_SPREAD_THRESHOLDS,
   localDate,
+  localDateMemo,
   median,
   summarize,
 } from '../src/lib/aggregate'
@@ -339,6 +340,18 @@ describe('aggregateByDay', () => {
     })
   })
 
+  it('compte un jour de précipitations à partir de 1 mm, seuil inclus', () => {
+    // Cumuls journaliers : a = 1 mm (compte), b = 0,9 mm (ne compte pas)
+    const temps = day.map(() => 15)
+    const spread = (total: number) => day.map((_, i) => (i === 0 ? total : 0))
+    const [result] = aggregateByDay(
+      [...model('a', temps, spread(1)), ...model('b', temps, spread(0.9))],
+      'UTC',
+    )
+    expect(result.values.precip.wetCount).toBe(1)
+    expect(result.values.tempMax).not.toHaveProperty('wetCount')
+  })
+
   it("exclut un modèle dont la journée est incomplète (fin d'horizon)", () => {
     const temps = day.map(() => 15)
     const truncated = day.map((_, i) => (i < 12 ? 15 : null))
@@ -357,5 +370,14 @@ describe('aggregateByDay', () => {
       ['2026-09-23', 22],
       ['2026-09-24', 2],
     ])
+  })
+})
+
+describe('localDateMemo', () => {
+  it('donne le même résultat que localDate', () => {
+    const dateOf = localDateMemo('America/Toronto')
+    const time = '2026-09-24T03:00:00.000Z'
+    expect(dateOf(time)).toBe(localDate(time, 'America/Toronto'))
+    expect(dateOf(time)).toBe('2026-09-23')
   })
 })

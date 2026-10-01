@@ -140,6 +140,42 @@ describe('buildForecastView', () => {
     expect(view.hourly[0].time).toBe('2026-09-23T10:00:00.000Z')
   })
 
+  it('transmet le nombre de modèles avec précipitations', () => {
+    // 2 modèles sur 5 prévoient de la pluie, à des heures différentes :
+    // médiane horaire à 0, mais wetCount le signale
+    const forecasts = ['a', 'b', 'c', 'd', 'e'].flatMap((source, i) =>
+      series(1, [source]).map((f, h) => ({
+        ...f,
+        precip: (i === 0 && h === 3) || (i === 1 && h === 15) ? 2 : 0,
+      })),
+    )
+    const view = buildForecastView(forecasts, 'UTC')
+    expect(view.hourly[3].values.precip).toMatchObject({
+      median: 0,
+      wetCount: 1,
+      modelCount: 5,
+    })
+    expect(view.daily[0].values.precip).toMatchObject({
+      median: 0,
+      wetCount: 2,
+    })
+  })
+
+  it('liste les modèles de la journée, heures passées comprises', () => {
+    // b ne fournit que le début de la journée, déjà passé
+    const forecasts = [
+      ...series(1, ['a']),
+      forecast('b', '2026-09-23T02:00:00.000Z', { temp: 10 }),
+    ]
+    const view = buildForecastView(
+      forecasts,
+      'UTC',
+      [],
+      '2026-09-23T10:00:00.000Z',
+    )
+    expect(view.models).toEqual(['a', 'b'])
+  })
+
   it('transmet les sources en échec', () => {
     const failures = [{ source: 'x', message: 'down' }]
     expect(buildForecastView([], 'UTC', failures).failures).toEqual(failures)

@@ -8,7 +8,7 @@ import {
   DAILY_SPREAD_THRESHOLDS,
   FORECAST_FIELDS,
   HOURLY_SPREAD_THRESHOLDS,
-  localDate,
+  localDateMemo,
 } from './aggregate'
 
 // Nombre de jours (dates locales) présentés comme prévision principale.
@@ -58,11 +58,12 @@ export function buildForecastView(
   failures: SourceFailure[] = [],
   from?: string,
 ): ForecastView {
-  const today = from === undefined ? undefined : localDate(from, timeZone)
+  const dateOf = localDateMemo(timeZone)
+  const today = from === undefined ? undefined : dateOf(from)
   const dayForecasts =
     today === undefined
       ? allForecasts
-      : allForecasts.filter((f) => localDate(f.time, timeZone) >= today)
+      : allForecasts.filter((f) => dateOf(f.time) >= today)
   const forecasts =
     from === undefined
       ? dayForecasts
@@ -71,11 +72,11 @@ export function buildForecastView(
     FORECAST_FIELDS.map((field) => [field, aggregateByHour(forecasts, field)]),
   )
   const times = [...new Set(forecasts.map((f) => f.time))].sort()
-  const dates = [...new Set(times.map((t) => localDate(t, timeZone)))].sort()
+  const dates = [...new Set(times.map(dateOf))].sort()
   const extendedDates = new Set(dates.slice(MAIN_FORECAST_DAYS))
 
   const hourly = times.map((time): HourlyPoint => {
-    const date = localDate(time, timeZone)
+    const date = dateOf(time)
     const extended = extendedDates.has(date)
     const values = {} as Record<ForecastField, RatedValue>
     for (const field of FORECAST_FIELDS) {
@@ -117,7 +118,7 @@ export function buildForecastView(
 
   const models = [
     ...new Set(
-      forecasts
+      dayForecasts
         .filter((f) => FORECAST_FIELDS.some((field) => f[field] !== null))
         .map((f) => f.source),
     ),
