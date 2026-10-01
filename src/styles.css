@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Vue illustrée : polices arrondies et palette pastel */
+@theme {
+  --font-display: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-rounded: "Nunito", ui-rounded, system-ui, sans-serif;
+  --color-ink: #23304f;
+  --color-ink-soft: #55607a;
+  --color-ground: #eef3fa;
+  --color-chip: #f1f5fb;
+  --color-drop: #3d86f0;
+  --color-drop-text: #2b62b8;
+  --color-agree-high: #ddf3e8;
+  --color-agree-mid: #fff0cc;
+  --color-agree-low: #fce1d9;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,4 +27,88 @@ body,
 
 body {
   margin: 0;
+}
+
+/* Animations des scènes. Elles s'appliquent à des groupes SVG sans attribut
+   `transform` (le CSS le remplacerait). */
+@keyframes scene-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scene-drift {
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes scene-fall {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+}
+
+@keyframes scene-bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes scene-twinkle {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.scene-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: scene-spin 30s linear infinite;
+}
+
+.scene-drift {
+  animation: scene-drift 7s ease-in-out infinite;
+}
+
+.scene-drift-back {
+  animation: scene-drift 8s ease-in-out infinite reverse;
+}
+
+.scene-swoosh {
+  animation: scene-drift 1.4s ease-in-out infinite;
+}
+
+.scene-fall {
+  animation: scene-fall 1s linear infinite;
+}
+
+.scene-fall-slow {
+  animation: scene-fall 2.4s linear infinite;
+}
+
+.scene-bob {
+  animation: scene-bob 2.4s ease-in-out infinite;
+}
+
+.scene-twinkle {
+  animation: scene-twinkle 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-spin,
+  .scene-drift,
+  .scene-drift-back,
+  .scene-swoosh,
+  .scene-fall,
+  .scene-fall-slow,
+  .scene-bob,
+  .scene-twinkle {
+    animation: none;
+  }
 }

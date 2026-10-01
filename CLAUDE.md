@@ -69,6 +69,19 @@ wind_speed_10m, wind_gusts_10m
 - `src/lib/weather.functions.ts` : server functions (seul point
   d'entrée vers les API) ; validation dans `src/lib/validation.ts`
 - `src/providers/index.ts` : liste des providers
+- Page prévision : trois vues via `?view=` (absent = illustrée,
+  `graph` = graphiques, `table` = tableaux)
+- Vue illustrée (une scène dessinée par heure et par jour) :
+  - `src/lib/scene.ts` : choix de la scène (seuils dans
+    `SCENE_THRESHOLDS`) et humeur du personnage (confiance faible =
+    il doute) ; fonctions pures, testées
+  - `src/lib/sun.ts` : jour/nuit et durée du jour par calcul
+    astronomique (pas de `is_day` dans l'appel API), testé
+  - `src/lib/illustrated-view.ts` : vue illustrée tirée de
+    `ForecastView`, calculée côté client, testée
+  - `src/components/illustrated/` : dessins (`Scene`) et blocs de la
+    vue, sans règle métier. Valeurs SVG en constantes (pas de
+    `Math.cos` au rendu) : sinon décalage d'hydratation serveur/client
 - Ajouter une source = ajouter un provider et l'inscrire dans
   `src/providers/index.ts`, rien d'autre ne change. Contrainte : le
   provider doit renvoyer toute la journée locale en cours, heures passées
@@ -156,7 +169,8 @@ type NormalizedForecast = {
 - `openmeteo-quebec-sec.json` : Québec, 48 h, 6 modèles, sans pluie
 - À ajouter : une fixture avec pluie, une avec neige, une sur 16 jours
   (pour tester les `null` en fin d'horizon)
-- Tests unitaires obligatoires pour `aggregate.ts` et la normalisation
+- Tests unitaires obligatoires pour `aggregate.ts`, la normalisation et
+  `scene.ts`
 
 ## Conventions
 - TypeScript strict, pas de `any`

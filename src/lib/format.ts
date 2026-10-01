@@ -62,3 +62,10 @@ export function formatWithUnit(value: number | null, meta: FieldMeta): string {
   const sep = meta.unit === '%' || meta.unit === '°C' ? '' : ' '
   return `${formatValue(value, meta)}${sep}${meta.unit}`
 }
+
+const DEGREES: FieldMeta = { label: '', short: '', unit: '°C', decimals: 0 }
+
+// Température arrondie au degré, pour la vue illustrée : "17°".
+export function formatDegrees(value: number | null): string {
+  return value === null ? '–' : `${formatValue(value, DEGREES)}°`
+}
